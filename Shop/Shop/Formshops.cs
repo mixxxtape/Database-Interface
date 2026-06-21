@@ -84,24 +84,38 @@ namespace Shop
             bool ok;
             if (_originalName != null)
             {
-                var deps = DbHelper.Query(
-                    "SELECT COUNT(*) AS cnt FROM public.heads WHERE shop=@n", ("n", _originalName));
-                ok = DbHelper.ExecuteTransaction(new[]
+                string newName = txtName.Text.Trim();
+                string newAddr = txtAddr.Text.Trim();
+                string newCont = txtCont.Text.Trim();
+
+                if (newName == _originalName)
                 {
-                    ("UPDATE public.supply SET shop=@newN WHERE shop=@origN",
-                     new[]{("newN", (object)txtName.Text.Trim()), ("origN", (object)_originalName)}),
-                    ("UPDATE public.product SET owner=@newN WHERE owner=@origN",
-                     new[]{("newN", (object)txtName.Text.Trim()), ("origN", (object)_originalName)}),
-                    ("UPDATE public.heads SET shop=@newN WHERE shop=@origN",
-                     new[]{("newN", (object)txtName.Text.Trim()), ("origN", (object)_originalName)}),
-                    ("UPDATE public.departments SET shop=@newN WHERE shop=@origN",
-                     new[]{("newN", (object)txtName.Text.Trim()), ("origN", (object)_originalName)}),
-                    ("UPDATE public.workers SET shop=@newN WHERE shop=@origN",
-                     new[]{("newN", (object)txtName.Text.Trim()), ("origN", (object)_originalName)}),
-                    ("UPDATE public.shops SET name=@newN, address=@a, contacts=@c WHERE name=@origN",
-                     new[]{("newN", (object)txtName.Text.Trim()), ("a", (object)txtAddr.Text.Trim()),
-                           ("c", (object)txtCont.Text.Trim()), ("origN", (object)_originalName)}),
-                });
+                    ok = DbHelper.Execute(
+                        "UPDATE public.shops SET address=@a, contacts=@c WHERE name=@n",
+                        ("a", newAddr), ("c", newCont), ("n", _originalName));
+                }
+                else
+                {
+                    ok = DbHelper.ExecuteTransaction(new[]
+                    {
+                        ("SET CONSTRAINTS ALL DEFERRED",
+                         new (string,object)[0]),
+                        ("INSERT INTO public.shops(name,address,contacts) VALUES(@newN,@a,@c)",
+                         new[]{("newN",(object)newName),("a",(object)newAddr),("c",(object)newCont)}),
+                        ("UPDATE public.departments SET shop=@newN WHERE shop=@origN",
+                         new[]{("newN",(object)newName),("origN",(object)_originalName)}),
+                        ("UPDATE public.workers    SET shop=@newN WHERE shop=@origN",
+                         new[]{("newN",(object)newName),("origN",(object)_originalName)}),
+                        ("UPDATE public.heads      SET shop=@newN WHERE shop=@origN",
+                         new[]{("newN",(object)newName),("origN",(object)_originalName)}),
+                        ("UPDATE public.product    SET owner=@newN WHERE owner=@origN",
+                         new[]{("newN",(object)newName),("origN",(object)_originalName)}),
+                        ("UPDATE public.supply     SET shop=@newN WHERE shop=@origN",
+                         new[]{("newN",(object)newName),("origN",(object)_originalName)}),
+                        ("DELETE FROM public.shops WHERE name=@origN",
+                         new[]{("origN",(object)_originalName)}),
+                    });
+                }
             }
             else
             {
@@ -111,7 +125,7 @@ namespace Shop
             }
             if (ok) { Load_(); ClearFields(); }
         }
-
+     
         void BtnDelete_Click(object s, EventArgs e)
         {
             if (dgv.CurrentRow == null) return;

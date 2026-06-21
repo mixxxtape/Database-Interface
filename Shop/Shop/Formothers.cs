@@ -1,5 +1,4 @@
-﻿// FormCustomers.cs — Покупці
-using System;
+﻿using System;
 using System.Data;
 using System.Windows.Forms;
 
@@ -12,8 +11,8 @@ namespace Shop
         private TextBox txtSur = new TextBox { Width = 100 };
         private TextBox txtMiddle = new TextBox { Width = 100 };
         private DataGridView dgv = new DataGridView { Dock = DockStyle.Fill };
-        private Button btnAdd = new Button { Text = "➕ Додати", Width = 90 };
-        private Button btnDelete = new Button { Text = "🗑 Видалити", Width = 90 };
+        private Button btnAdd = new Button { Text = "Додати", Width = 90 };
+        private Button btnDelete = new Button { Text = "Видалити", Width = 90 };
 
         public FormCustomers()
         {
@@ -68,15 +67,13 @@ namespace Shop
         };
     }
 
-
-    // ════════════════════════════════════════════════════════════
     public class FormProviders : Form
     {
         private TextBox txtName = new TextBox { Width = 140 };
         private TextBox txtAddr = new TextBox { Width = 220 };
         private DataGridView dgv = new DataGridView { Dock = DockStyle.Fill };
-        private Button btnAdd = new Button { Text = "➕ Додати", Width = 90 };
-        private Button btnDelete = new Button { Text = "🗑 Видалити", Width = 90 };
+        private Button btnAdd = new Button { Text = "Додати", Width = 90 };
+        private Button btnDelete = new Button { Text = "Видалити", Width = 90 };
 
         public FormProviders()
         {
@@ -123,8 +120,6 @@ namespace Shop
         };
     }
 
-
-    // ════════════════════════════════════════════════════════════
     public class FormSupply : Form
     {
         private ComboBox cmbProvider = new ComboBox { Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
@@ -132,8 +127,8 @@ namespace Shop
         private ComboBox cmbShop = new ComboBox { Width = 130, DropDownStyle = ComboBoxStyle.DropDownList };
         private TextBox txtAmount = new TextBox { Width = 60 };
         private DataGridView dgv = new DataGridView { Dock = DockStyle.Fill };
-        private Button btnAdd = new Button { Text = "➕ Додати", Width = 90 };
-        private Button btnDelete = new Button { Text = "🗑 Видалити", Width = 90 };
+        private Button btnAdd = new Button { Text = "Додати", Width = 90 };
+        private Button btnDelete = new Button { Text = "Видалити", Width = 90 };
 
         public FormSupply()
         {
@@ -215,8 +210,6 @@ namespace Shop
         };
     }
 
-
-    // ════════════════════════════════════════════════════════════
     public class FormPurchases : Form
     {
         private ComboBox cmbProduct = new ComboBox { Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
@@ -229,7 +222,6 @@ namespace Shop
         private Button btnRefresh = new Button { Text = "Оновити", Width = 90 };
         private Button btnClear = new Button { Text = "Очистити", Width = 90 };
 
-        // Зберігаємо точний timestamp як рядок — щоб уникнути проблем з часовим поясом
         private int? _selProductId = null;
         private string _selPhone = null;
         private string _selDateRaw = null;
@@ -317,7 +309,6 @@ namespace Shop
                   JOIN public.customer c ON c.phone = pu.customer
                   ORDER BY pu.purchase_date DESC"));
 
-            // Ховаємо технічні колонки — потрібні лише для DELETE/UPDATE
             if (dgv.Columns["PurchaseDateRaw"] != null) dgv.Columns["PurchaseDateRaw"].Visible = false;
             if (dgv.Columns["ProductId"] != null) dgv.Columns["ProductId"].Visible = false;
             if (dgv.Columns["Phone"] != null) dgv.Columns["Phone"].Visible = false;
@@ -337,7 +328,6 @@ namespace Shop
             if (cmbProduct.SelectedItem == null || cmbCustomer.SelectedItem == null)
             { MessageBox.Show("Оберіть товар і покупця."); return; }
 
-            // Валідація суми — якщо не порожнє, має бути числом
             decimal total = 0;
             string totalText = txtTotal.Text.Trim().Replace(',', '.');
             if (!string.IsNullOrWhiteSpace(totalText))
@@ -357,7 +347,6 @@ namespace Shop
             bool ok;
             if (_selProductId.HasValue && _selPhone != null && _selDateRaw != null)
             {
-                // Редагування існуючого запису — оновлюємо лише суму
                 ok = DbHelper.Execute(
                     @"UPDATE public.purchase SET total=@tot
                       WHERE product=@prod AND customer=@cust
@@ -369,7 +358,6 @@ namespace Shop
             }
             else
             {
-                // Новий запис
                 int productId = int.Parse(cmbProduct.SelectedItem.ToString().Split('—')[0].Trim());
                 string phone = cmbCustomer.SelectedItem.ToString().Split('—')[0].Trim();
                 ok = DbHelper.Execute(
@@ -395,7 +383,6 @@ namespace Shop
             if (MessageBox.Show("Видалити цей запис покупки?", "Підтвердження",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                // Видаляємо за точним timestamp з БД — без жодних перетворень дат C#
                 bool ok = DbHelper.Execute(
                     @"DELETE FROM public.purchase
                       WHERE product=@prod AND customer=@cust

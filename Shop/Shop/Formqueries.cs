@@ -177,27 +177,21 @@ namespace Shop
                 }));
 
             layout.Controls.Add(QueryBtn(
-                "Постачальники що не постачають такі ж товари що і X",
-                () =>
-                {
-                    string prov = AskTextWithList(
-                        "Введіть або оберіть постачальника(X):",
-                        "SELECT name FROM public.provider ORDER BY name", "name");
-                    if (prov == null) return null;
-                    return DbHelper.Query(
-                        @"SELECT pr.name    ""Постачальник""
-                          FROM public.provider pr
-                          WHERE pr.name <> @p
-                            AND pr.name NOT IN (
-                                SELECT s.provider
-                                FROM public.supply s
-                                WHERE s.product IN (
-                                    SELECT product
-                                    FROM public.supply
-                                    WHERE provider = @p))
-                          ORDER BY pr.name",
-                        ("p", prov));
-                }));
+                "Покупці які купили товари всіх існуючих брендів",
+                () => DbHelper.Query(
+                    @"SELECT c.surname||' '||c.name AS ""Покупець"",
+                             c.phone                AS ""Телефон"",
+                             COUNT(pu.product)      AS ""К-сть покупок""
+                      FROM public.customer c
+                      JOIN public.purchase pu ON pu.customer = c.phone
+                      WHERE NOT EXISTS (
+                          SELECT DISTINCT brand FROM public.product WHERE brand IS NOT NULL
+                          EXCEPT
+                          SELECT DISTINCT p.brand FROM public.purchase pu2
+                          JOIN public.product p ON p.id = pu2.product
+                          WHERE pu2.customer = c.phone)
+                      GROUP BY c.phone, c.surname, c.name
+                      ORDER BY c.surname")));
 
             pnlButtons.Controls.Add(layout);
 

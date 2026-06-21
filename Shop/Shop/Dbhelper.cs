@@ -1,5 +1,4 @@
-﻿// DbHelper.cs
-using System;
+﻿using System;
 using System.Data;
 using System.Windows.Forms;
 using Npgsql;
@@ -49,7 +48,6 @@ namespace Shop
                 return false;
             }
         }
-
         public static bool ExecuteTransaction((string sql, (string name, object value)[] parms)[] commands)
         {
             try
